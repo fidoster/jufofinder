@@ -6,13 +6,18 @@ import random
 from fuzzywuzzy import fuzz
 from database import init_db, save_search, get_history, delete_search, get_cached_results, cache_results
 import json
+import logging
 
 app = Flask(__name__)
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Global flag for stopping the search
 stop_search = False
 
-# Cache for JUFO levels to avoid repeated API calls
+# Cache for JUFO levels
 jufo_cache = {}
 
 # Crossref API setup
@@ -22,7 +27,7 @@ def crossref_search(query, rows=20, offset=0):
     params = {"query": query, "rows": rows, "offset": offset, "select": "DOI,title,container-title,issued"}
     response = requests.get(base_url, params=params)
     if response.status_code != 200:
-        print(f"Crossref request failed: {response.status_code} - {response.text}")
+        logger.error(f"Crossref request failed: {response.status_code} - {response.text}")
         return []
     data = response.json()
     items = data["message"]["items"]
@@ -34,16 +39,21 @@ def crossref_search(query, rows=20, offset=0):
         "raw_info": f"{', '.join(item.get('author', [{'given': '', 'family': ''}])[0].values())} - {item.get('container-title', [''])[0]}, {item.get('issued', {}).get('date-parts', [['']])[0][0]}"
     } for item in items] if items else []
 
-# JUFO API functions
 def fetch_jufo_api(url):
     try:
         response = requests.get(url, timeout=10)
-        return response.json() if response.ok and isinstance(response.json(), list) and response.json() else None
-    except:
+        if response.ok and isinstance(response.json(), list) and response.json():
+            return response.json()
+        logger.warning(f"JUFO API returned non-list or empty: {response.status_code} - {response.text}")
+        return None
+    except Exception as e:
+        logger.error(f"JUFO API error: {str(e)}")
         return None
 
 def try_jufo_queries_in_sequence(query):
     base_url = "https://jufo-rest.csc.fi/v1.1/etsi.php"
+    # Truncate long queries to avoid 400 errors
+    query = query[:100] if len(query) > 100 else query
     for param in ["nimi", "nimi", "issn"]:
         url = f"{base_url}?{param}={requests.utils.quote(query if param != 'nimi' or param == 'nimi' and query == query else f'*{query}*')}"
         data = fetch_jufo_api(url)
@@ -67,28 +77,33 @@ def get_jufo_level(journal_name):
     if journal_name == "Unknown":
         return None
     if journal_name in jufo_cache:
+        logger.debug(f"JUFO cache hit: {journal_name} -> {jufo_cache[journal_name]}")
         return jufo_cache[journal_name]
     results = try_jufo_queries_in_sequence(journal_name)
     if not results:
+        logger.debug(f"No JUFO results for: {journal_name}")
         jufo_cache[journal_name] = None
         return None
     best_match = max(results, key=lambda x: fuzz.ratio(x.get("Name", ""), journal_name), default=None)
-    if best_match and fuzz.ratio(best_match.get("Name", ""), journal_name) > 70:
+    ratio = fuzz.ratio(best_match.get("Name", ""), journal_name) if best_match else 0
+    logger.debug(f"JUFO match for {journal_name}: {best_match.get('Name', '') if best_match else 'None'}, Ratio: {ratio}")
+    if best_match and ratio > 60:
         level = augment_jufo_result(best_match)
         jufo_cache[journal_name] = level
+        logger.debug(f"JUFO level assigned: {journal_name} -> {level}")
         return level
     jufo_cache[journal_name] = None
+    with open("unmatched_journals.txt", "a") as f:
+        f.write(f"{journal_name}, Ratio: {ratio}\n")
     return None
 
-# Sort results by JUFO level (descending)
 def sort_results(results):
     def sort_key(item):
         level = item["level"]
         return (-1 if level == "Not JUFO Ranked" else level, item["title"])
     return sorted(results, key=sort_key, reverse=True)
 
-# Generator for search progress
-def search_stream(keywords, max_articles_per_keyword=100, target_jufo=None, year_range=None):
+def search_stream(keywords, max_articles_per_keyword=1000, target_jufo=None, year_range=None):
     global stop_search
     stop_search = False
     total_articles = max_articles_per_keyword * len(keywords.split(",")) if not target_jufo else 1000
@@ -97,7 +112,6 @@ def search_stream(keywords, max_articles_per_keyword=100, target_jufo=None, year
     results = []
     cached_articles = set()
 
-    # Parse year range
     min_year = None
     max_year = None
     if year_range and year_range != "all":
@@ -107,36 +121,37 @@ def search_stream(keywords, max_articles_per_keyword=100, target_jufo=None, year
             min_year = int(year_range)
             max_year = 9999
 
-    # Load cached results
     for keyword in keywords.split(","):
         cached = get_cached_results(keyword.strip())
         for article in cached:
             if article["link"] not in cached_articles and len([r for r in results if r["raw_info"].startswith(keyword.strip())]) < max_articles_per_keyword:
                 year = int(article["year"]) if article["year"] not in ("N/A", "None") and article["year"] else None
                 if year_range == "all" or (year and (not min_year or year >= min_year) and (not max_year or year <= max_year)):
-                    print(f"Cached article: {article['title']}, Year: {article['year']}")  # Debug
+                    logger.debug(f"Cached article: {article['title']}, Year: {article['year']}")
                     results.append(article)
                     cached_articles.add(article["link"])
                     if article["level"] in [2, 3]:
                         jufo_2_3_count += 1
 
+    should_stop = False
     for keyword in keywords.split(","):
         keyword = keyword.strip()
         keyword_results = [r for r in results if r["raw_info"].startswith(keyword)]
         offset = len(keyword_results)
         keyword_articles = offset
 
-        while (keyword_articles < max_articles_per_keyword or (target_jufo and jufo_2_3_count < target_jufo)) and articles_processed < total_articles and not stop_search:
+        while articles_processed < total_articles and not stop_search and not should_stop:
             articles = crossref_search(keyword, rows=20, offset=offset)
             if not articles:
+                logger.warning(f"No more articles from Crossref for {keyword} at offset {offset}")
                 break
             for article in articles:
-                if article["link"] not in cached_articles and keyword_articles < max_articles_per_keyword:
+                if article["link"] not in cached_articles:
                     year = int(article["year"]) if article["year"] not in ("N/A", "None") and article["year"] else None
                     if year_range == "all" or (year and (not min_year or year >= min_year) and (not max_year or year <= max_year)):
                         articles_processed += 1
                         keyword_articles += 1
-                        print(f"New article: {article['title']}, Year: {article['year']}")  # Debug
+                        logger.info(f"Processing article {articles_processed}/{total_articles}: {article['title']}, Year: {article['year']}")
                         yield f"data: {json.dumps({'status': 'Checking', 'article': article['title'], 'progress': min((articles_processed / total_articles) * 100, 100), 'current': articles_processed, 'total': total_articles, 'jufo_count': jufo_2_3_count, 'results': results})}\n\n"
                         level = get_jufo_level(article["journal"])
                         article["level"] = level if level else "Not JUFO Ranked"
@@ -144,18 +159,22 @@ def search_stream(keywords, max_articles_per_keyword=100, target_jufo=None, year
                         cached_articles.add(article["link"])
                         if level in [2, 3]:
                             jufo_2_3_count += 1
+                            logger.info(f"Found JUFO 2/3 article: {article['title']}, Level: {level}")
                         if target_jufo and jufo_2_3_count >= target_jufo:
+                            should_stop = True
+                            logger.info(f"Target JUFO 2/3 ({target_jufo}) reached at {jufo_2_3_count}")
                             break
-                time.sleep(random.uniform(0.1, 0.5))  # Reduced sleep
-            if target_jufo and jufo_2_3_count >= target_jufo:
+                time.sleep(1)
+            if should_stop:
                 break
             offset += 20
-            time.sleep(random.uniform(0.5, 1))  # Reduced sleep
-    
+            time.sleep(1)
+
     sorted_results = sort_results(results)
     cache_results(keywords, sorted_results)
     save_search(keywords, sorted_results)
-    status = "Stopped" if stop_search else "Complete"
+    status = "Stopped" if stop_search or should_stop else "Complete"
+    logger.info(f"Search {status}: Processed {articles_processed}/{total_articles}, JUFO 2/3: {jufo_2_3_count}")
     yield f"data: {json.dumps({'status': status, 'results': sorted_results, 'progress': 100, 'current': articles_processed, 'total': total_articles, 'jufo_count': jufo_2_3_count})}\n\n"
 
 @app.route("/")
@@ -165,9 +184,10 @@ def index():
 @app.route("/search_stream")
 def search_stream_route():
     keywords = request.args.get("keywords")
-    max_articles = int(request.args.get("max_articles", 100))
+    max_articles = int(request.args.get("max_articles", 1000))  # Default to 1000
     target_jufo = int(request.args.get("target_jufo", 0)) if request.args.get("target_jufo") else None
     year_range = request.args.get("year_range", "all")
+    logger.info(f"Starting search: keywords={keywords}, max_articles={max_articles}, target_jufo={target_jufo}, year_range={year_range}")
     return Response(search_stream(keywords, max_articles, target_jufo, year_range), mimetype="text/event-stream")
 
 @app.route("/stop_search", methods=["POST"])

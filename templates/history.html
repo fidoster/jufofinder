@@ -12,6 +12,10 @@
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Jester Research Tool Logo" class="logo">
             <h1><a href="{{ url_for('index') }}" class="title-link">Jester Research Tool</a> - Search History</h1>
         </div>
+        <div class="nav-bar">
+            <a href="{{ url_for('index') }}" class="nav-tab">Home</a>
+            <a href="{{ url_for('history') }}" class="nav-tab">History</a>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -34,6 +38,9 @@
         </table>
         <a href="{{ url_for('index') }}" class="history-link">Back to Search</a>
     </div>
+    <footer class="footer">
+        <p>Copyright © Jester Research Tool 2025</p>
+    </footer>
     <script>
         document.querySelectorAll(".delete-btn").forEach(btn => {
             btn.addEventListener("click", () => {
