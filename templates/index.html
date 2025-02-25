@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jester Research Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Jester Research Tool Logo" class="logo">
+            <h1><a href="{{ url_for('index') }}" class="title-link">Jester Research Tool</a></h1>
+        </div>
+        {% if not from_history %}
+        <div class="search-section">
+            <form id="searchForm">
+                <div class="input-group">
+                    <input type="text" name="keywords" placeholder="Enter keywords (e.g., AI chatbots in education)" required>
+                    <input type="number" name="max_articles" placeholder="Max articles per keyword" value="100" min="1">
+                </div>
+                <div class="advanced-options">
+                    <label for="yearRange">Year Range:</label>
+                    <select name="year_range" id="yearRange">
+                        <option value="all">All Years</option>
+                        <option value="2010-9999">2010 Onwards</option>
+                        <option value="2015-9999">2015 Onwards</option>
+                        <option value="2020-9999">2020 Onwards</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                    <div id="customYearRange" style="display:none;">
+                        <input type="number" name="year_start" id="yearStart" placeholder="Start" min="1900" max="2025" style="width:70px;">
+                        <input type="number" name="year_end" id="yearEnd" placeholder="End" min="1900" max="2025" style="width:70px;">
+                    </div>
+                    <label for="targetJufo">Advanced Search:</label>
+                    <select name="target_jufo" id="targetJufo">
+                        <option value="">Standard Search</option>
+                        <option value="5">Stop at 5 JUFO 2/3</option>
+                        <option value="10">Stop at 10 JUFO 2/3</option>
+                        <option value="15">Stop at 15 JUFO 2/3</option>
+                        <option value="20">Stop at 20 JUFO 2/3</option>
+                    </select>
+                    <button type="submit" id="searchBtn">Search</button>
+                    <button type="button" id="stopBtn" class="stop-btn" style="display:none;">Stop</button>
+                </div>
+            </form>
+        </div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+            <div id="progress-info">
+                <p id="progress-text">Ready to search</p>
+                <p id="jufo-count">JUFO 2/3: 0</p>
+            </div>
+        </div>
+        <div id="filter-container">
+            <label for="jufoFilter">Filter by JUFO Level:</label>
+            <select id="jufoFilter">
+                <option value="all">All</option>
+                <option value="2_3">2 & 3</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+                <option value="0">0</option>
+                <option value="not_ranked">Not JUFO Ranked</option>
+            </select>
+        </div>
+        {% else %}
+        <h2>Results for "{{ keywords }}"</h2>
+        {% endif %}
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th class="sortable" data-sort="title">Title</th>
+                    <th class="sortable" data-sort="journal">Journal</th>
+                    <th class="sortable" data-sort="year">Year</th>
+                    <th class="sortable" data-sort="level">JUFO Level</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if from_history and results %}
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.title | safe }}</td>
+                    <td>{{ result.journal }}</td>
+                    <td>{{ result.year }}</td>
+                    <td>{{ result.level }}</td>
+                    <td><a href="{{ result.link }}" target="_blank">{{ "View Article" if result.link != 'No link available' else 'No Link' }}</a></td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+        {% if not from_history %}
+        <button id="downloadBtn" style="display:none;" class="action-btn">Download CSV</button>
+        <a href="{{ url_for('history') }}" class="history-link">View Search History</a>
+        {% else %}
+        <div class="button-group">
+            <a href="{{ url_for('download_csv', keywords=keywords) }}" class="action-btn">Download CSV</a>
+            <a href="{{ url_for('index') }}" class="action-btn">Back to Search</a>
+        </div>
+        {% endif %}
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

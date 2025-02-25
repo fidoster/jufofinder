@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Jester Research Tool Logo" class="logo">
+            <h1><a href="{{ url_for('index') }}" class="title-link">Jester Research Tool</a> - Search History</h1>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="sortable" data-sort="keywords">Keywords</th>
+                    <th class="sortable" data-sort="timestamp">Timestamp</th>
+                    <th class="sortable" data-sort="count">Results Count</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for search in searches %}
+                <tr>
+                    <td><a href="{{ url_for('history_results', keywords=search.keywords) }}">{{ search.keywords }}</a></td>
+                    <td>{{ search.timestamp }}</td>
+                    <td>{{ search.count }}</td>
+                    <td><button class="delete-btn" data-keywords="{{ search.keywords }}">Delete</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('index') }}" class="history-link">Back to Search</a>
+    </div>
+    <script>
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const keywords = btn.getAttribute("data-keywords");
+                fetch(`/delete_search/${encodeURIComponent(keywords)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            btn.closest("tr").remove();
+                        }
+                    });
+            });
+        });
+
+        document.querySelectorAll(".sortable").forEach(th => {
+            th.addEventListener("click", () => {
+                const table = th.closest("table");
+                const tbody = table.querySelector("tbody");
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+                const index = Array.from(th.parentNode.children).indexOf(th);
+                const isAsc = th.classList.contains("sort-asc");
+
+                document.querySelectorAll(".sortable").forEach(h => {
+                    h.classList.remove("sort-asc", "sort-desc");
+                });
+                th.classList.add(isAsc ? "sort-desc" : "sort-asc");
+
+                rows.sort((a, b) => {
+                    let aValue = a.children[index].textContent;
+                    let bValue = b.children[index].textContent;
+                    if (index === 2) { // Results Count
+                        aValue = parseInt(aValue) || 0;
+                        bValue = parseInt(bValue) || 0;
+                        return isAsc ? bValue - aValue : aValue - bValue;
+                    }
+                    return isAsc ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
+                });
+
+                tbody.innerHTML = "";
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+    </script>
+</body>
+</html>
