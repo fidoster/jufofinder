@@ -3,3 +3,24 @@ Social Science Studies, Ratio: 55
 APT Bulletin, Ratio: 28
 CALICO Journal, Ratio: 57
 VISION, Ratio: 33
+ReCALL, Ratio: 33
+Findings, Ratio: 20
+VISION, Ratio: 33
+Pastoral Care in Education, Ratio: 39
+Scars, Ratio: 37
+Early Years, Ratio: 35
+Computer-Assisted Language Learning, Ratio: 57
+Multilingual Education, Ratio: 58
+TEM Journal, Ratio: 56
+Analytics, Ratio: 59
+PROTEOMICS, Ratio: 10
+STEM Journal, Ratio: 41
+MISSION, Ratio: 17
+DigItalia, Ratio: 29
+Smart Computing, Ratio: 41
+Skipr, Ratio: 47
+Arbor, Ratio: 56
+KINETIK, Ratio: 0
+STEM Journal, Ratio: 41
+Journal of New Media, Ratio: 52
+mHealth, Ratio: 39

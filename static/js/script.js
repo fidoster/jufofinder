@@ -1,14 +1,13 @@
-let source = null;
+document.addEventListener("DOMContentLoaded", function () {
+  let source = null;
 
-// Front-page specific logic
-if (document.getElementById("searchForm")) {
-  document
-    .getElementById("searchForm")
-    .addEventListener("submit", function (e) {
+  const searchForm = document.getElementById("searchForm");
+  if (searchForm) {
+    searchForm.addEventListener("submit", function (e) {
       e.preventDefault();
       const formData = new FormData(this);
       const keywords = formData.get("keywords");
-      const maxArticles = parseInt(formData.get("max_articles")) || 100;
+      const maxArticles = parseInt(formData.get("max_articles")) || 1000;
       const targetJufo = formData.get("target_jufo")
         ? parseInt(formData.get("target_jufo"))
         : null;
@@ -76,127 +75,210 @@ if (document.getElementById("searchForm")) {
       };
     });
 
-  document.getElementById("stopBtn").addEventListener("click", function () {
-    if (source) {
-      fetch("/stop_search", { method: "POST" })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === "stopped") {
-            // Backend will yield results and close the stream
-          }
-        });
-    }
-  });
-
-  document.getElementById("yearRange").addEventListener("change", function () {
-    const customYearRange = document.getElementById("customYearRange");
-    customYearRange.style.display =
-      this.value === "custom" ? "inline-block" : "none";
-  });
-
-  document.getElementById("jufoFilter").addEventListener("change", applyFilter);
-}
-
-// Shared table sorting and filtering logic
-function populateTable(results, keywords) {
-  const tbody = document.querySelector("#resultsTable tbody");
-  tbody.innerHTML = "";
-  results.forEach((result) => {
-    const highlightedTitle = highlightKeywords(result.title, keywords);
-    const highlightedJournal = highlightKeywords(result.journal, keywords);
-    const row = document.createElement("tr");
-    row.innerHTML = `
-            <td>${highlightedTitle}</td>
-            <td>${highlightedJournal}</td>
-            <td>${result.year}</td>
-            <td>${result.level}</td>
-            <td><a href="${result.link}" target="_blank">${
-      result.link === "No link available" ? "No Link" : "View Article"
-    }</a></td>
-        `;
-    tbody.appendChild(row);
-  });
-  applyFilter();
-}
-
-function highlightKeywords(text, keywords) {
-  let highlighted = text;
-  keywords.forEach((keyword) => {
-    const regex = new RegExp(`(${keyword})`, "gi");
-    highlighted = highlighted.replace(
-      regex,
-      '<span class="highlight">$1</span>'
-    );
-  });
-  return highlighted;
-}
-
-document.querySelectorAll(".sortable").forEach((th) => {
-  th.addEventListener("click", () => {
-    const table = th.closest("table");
-    const tbody = table.querySelector("tbody");
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const index = Array.from(th.parentNode.children).indexOf(th);
-    const isAsc = th.classList.contains("sort-asc");
-
-    document.querySelectorAll(".sortable").forEach((h) => {
-      h.classList.remove("sort-asc", "sort-desc");
-    });
-    th.classList.add(isAsc ? "sort-desc" : "sort-asc");
-
-    rows.sort((a, b) => {
-      let aValue = a.children[index].textContent;
-      let bValue = b.children[index].textContent;
-      if (index === 3) {
-        // JUFO Level
-        aValue = aValue === "Not JUFO Ranked" ? -1 : parseInt(aValue) || 0;
-        bValue = bValue === "Not JUFO Ranked" ? -1 : parseInt(bValue) || 0;
-        return isAsc ? bValue - aValue : aValue - bValue;
-      } else if (index === 2) {
-        // Year
-        aValue = aValue === "N/A" ? -1 : parseInt(aValue) || 0;
-        bValue = bValue === "N/A" ? -1 : parseInt(bValue) || 0;
-        return isAsc ? bValue - aValue : aValue - bValue;
+    document.getElementById("stopBtn").addEventListener("click", function () {
+      if (source) {
+        fetch("/stop_search", { method: "POST" })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "stopped") {
+              console.log("Search stopped");
+            }
+          })
+          .catch((error) => console.error("Error stopping search:", error));
       }
-      return isAsc
-        ? bValue.localeCompare(aValue)
-        : aValue.localeCompare(bValue);
     });
 
-    tbody.innerHTML = "";
-    rows.forEach((row) => tbody.appendChild(row));
-  });
-});
+    document
+      .getElementById("yearRange")
+      .addEventListener("change", function () {
+        const customYearRange = document.getElementById("customYearRange");
+        customYearRange.style.display =
+          this.value === "custom" ? "inline-block" : "none";
+      });
 
-function applyFilter() {
-  const filterValue = document.getElementById("jufoFilter").value;
-  const rows = document.querySelectorAll("#resultsTable tbody tr");
-  rows.forEach((row) => {
-    const level = row.children[3].textContent;
-    let show = true;
-    switch (filterValue) {
-      case "2_3":
-        show = level === "2" || level === "3";
-        break;
-      case "3":
-        show = level === "3";
-        break;
-      case "2":
-        show = level === "2";
-        break;
-      case "1":
-        show = level === "1";
-        break;
-      case "0":
-        show = level === "0";
-        break;
-      case "not_ranked":
-        show = level === "Not JUFO Ranked";
-        break;
-      case "all":
-      default:
-        show = true;
+    document
+      .getElementById("jufoFilter")
+      .addEventListener("change", applyFilter);
+  }
+
+  function populateTable(results, keywords) {
+    const tbody = document.querySelector("#resultsTable tbody");
+    const isHistoryPage = !!document.getElementById("deleteNotJufoBtn");
+    tbody.innerHTML = "";
+    results.forEach((result) => {
+      const highlightedTitle = highlightKeywords(result.title, keywords);
+      const highlightedJournal = highlightKeywords(result.journal, keywords);
+      const row = document.createElement("tr");
+      row.innerHTML = `
+                <td>${highlightedTitle}</td>
+                <td>${highlightedJournal}</td>
+                <td>${result.year}</td>
+                <td>${result.level}</td>
+                <td>${
+                  result.link !== "No link available"
+                    ? `<a href="${result.link}" target="_blank" class="article-btn">Article</a>`
+                    : "<span>No Link</span>"
+                }</td>
+                ${
+                  isHistoryPage
+                    ? `<td><button class="delete-btn delete-article-btn" data-keywords="${keywords}" data-link="${result.link}">Delete</button></td>`
+                    : ""
+                }
+            `;
+      tbody.appendChild(row);
+    });
+    applyFilter();
+    attachDeleteListeners();
+  }
+
+  function attachDeleteListeners() {
+    document.querySelectorAll(".delete-article-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const keywords = btn.getAttribute("data-keywords");
+        const link = btn.getAttribute("data-link");
+        fetch(
+          `/delete_article/${encodeURIComponent(keywords)}/${encodeURIComponent(
+            link
+          )}`,
+          { method: "POST" }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Delete response:", data);
+            if (data.status === "success") {
+              btn.closest("tr").remove();
+              updateHistoryCount(keywords, data.remaining_count);
+            } else {
+              console.error("Delete failed:", data.status);
+            }
+          })
+          .catch((error) => console.error("Error deleting article:", error));
+      });
+    });
+
+    const deleteNotJufoBtn = document.getElementById("deleteNotJufoBtn");
+    if (deleteNotJufoBtn) {
+      deleteNotJufoBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const keywords = document
+          .querySelector("h2")
+          .textContent.replace("Results for ", "")
+          .replace(/"/g, "");
+        fetch(`/delete_not_jufo/${encodeURIComponent(keywords)}`, {
+          method: "POST",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Delete not JUFO response:", data);
+            if (data.status === "success") {
+              document
+                .querySelectorAll("#resultsTable tbody tr")
+                .forEach((row) => {
+                  if (row.children[3].textContent === "Not JUFO Ranked") {
+                    row.remove();
+                  }
+                });
+              updateHistoryCount(keywords, data.remaining_count);
+            } else {
+              console.error("Delete not JUFO failed:", data.status);
+            }
+          })
+          .catch((error) =>
+            console.error("Error deleting not JUFO articles:", error)
+          );
+      });
     }
-    row.style.display = show ? "" : "none";
+  }
+
+  function highlightKeywords(text, keywords) {
+    let highlighted = text;
+    keywords.forEach((keyword) => {
+      const regex = new RegExp(`(${keyword})`, "gi");
+      highlighted = highlighted.replace(
+        regex,
+        '<span class="highlight">$1</span>'
+      );
+    });
+    return highlighted;
+  }
+
+  document.querySelectorAll(".sortable").forEach((th) => {
+    th.addEventListener("click", () => {
+      const table = th.closest("table");
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const index = Array.from(th.parentNode.children).indexOf(th);
+      const isAsc = th.classList.contains("sort-asc");
+
+      document.querySelectorAll(".sortable").forEach((h) => {
+        h.classList.remove("sort-asc", "sort-desc");
+      });
+      th.classList.add(isAsc ? "sort-desc" : "sort-asc");
+
+      rows.sort((a, b) => {
+        let aValue = a.children[index].textContent;
+        let bValue = b.children[index].textContent;
+        if (index === 3) {
+          // JUFO Level
+          aValue = aValue === "Not JUFO Ranked" ? -1 : parseInt(aValue) || 0;
+          bValue = bValue === "Not JUFO Ranked" ? -1 : parseInt(bValue) || 0;
+          return isAsc ? bValue - aValue : aValue - bValue;
+        } else if (index === 2) {
+          // Year
+          aValue = aValue === "N/A" ? -1 : parseInt(aValue) || 0;
+          bValue = bValue === "N/A" ? -1 : parseInt(bValue) || 0;
+          return isAsc ? bValue - aValue : aValue - bValue;
+        }
+        return isAsc
+          ? bValue.localeCompare(aValue)
+          : aValue.localeCompare(bValue);
+      });
+
+      tbody.innerHTML = "";
+      rows.forEach((row) => tbody.appendChild(row));
+      attachDeleteListeners(); // Re-attach listeners after sorting
+    });
   });
-}
+
+  function applyFilter() {
+    const filterValue = document.getElementById("jufoFilter").value;
+    const rows = document.querySelectorAll("#resultsTable tbody tr");
+    rows.forEach((row) => {
+      const level = row.children[3].textContent;
+      let show = true;
+      switch (filterValue) {
+        case "2_3":
+          show = level === "2" || level === "3";
+          break;
+        case "3":
+          show = level === "3";
+          break;
+        case "2":
+          show = level === "2";
+          break;
+        case "1":
+          show = level === "1";
+          break;
+        case "0":
+          show = level === "0";
+          break;
+        case "not_ranked":
+          show = level === "Not JUFO Ranked";
+          break;
+        case "all":
+        default:
+          show = true;
+      }
+      row.style.display = show ? "" : "none";
+    });
+    attachDeleteListeners(); // Re-attach listeners after filtering
+  }
+
+  function updateHistoryCount(keywords, newCount) {
+    console.log(`Updated count for "${keywords}": ${newCount}`);
+  }
+
+  // Initial attachment of delete listeners
+  attachDeleteListeners();
+});
