@@ -1,0 +1,120 @@
+/* custom.css */
+
+/* 1) Global Body: Single sky-blue background */
+body {
+  background-color: #e3f2fd; /* Light sky blue */
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: #212121;
+}
+
+/* 2) Main container/card styling */
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.main-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+  padding: 20px;
+}
+
+/* 3) Navigation Bar */
+.main-nav {
+  background-color: #1565c0; /* Navy-ish blue */
+  border-radius: 8px;
+  padding: 10px 20px;
+  margin-bottom: 20px;
+}
+.main-nav .nav-link {
+  color: #ffffff !important;
+  font-weight: 500;
+  margin-right: 10px;
+  transition: background 0.3s, color 0.3s;
+}
+.main-nav .nav-link:hover {
+  background-color: #0d47a1 !important; /* Darker navy on hover */
+  border-radius: 4px;
+}
+
+/* 4) Logo styling */
+.logo {
+  width: 100px;
+  height: auto;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+/* 5) Site Title */
+.site-title {
+  color: #212121;
+  text-decoration: none;
+}
+
+/* 6) Card styling for projects/sections/blocks */
+.card {
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+}
+.project-card {
+  background-color: #ffffff;
+  color: #212121;
+}
+.section-card {
+  background-color: #f5f5f5;
+  color: #212121;
+}
+.keyword-card {
+  background-color: #ffffff;
+  color: #212121;
+}
+
+/* 7) Buttons */
+/* Keep the default Bootstrap .btn-primary for main actions. */
+/* Keep .btn-danger for Delete. */
+
+/* 8) Progress bar */
+.progress {
+  height: 30px; /* Broader progress bar */
+  background-color: rgba(0, 0, 0, 0.1); /* Subtle dark background for contrast */
+  border-radius: 5px;
+}
+
+#progress-bar {
+  background: linear-gradient(to right, rgba(255, 0, 0, 0.7), rgba(0, 0, 255, 0.7));
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}
+
+
+
+/* 9) Table stripes */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: rgba(0,0,0,0.02);
+}
+.table-striped > tbody > tr:nth-of-type(even) > * {
+  background-color: transparent;
+}
+
+/* 10) Footer styling */
+footer {
+  color: #757575;
+  padding: 20px;
+  text-align: center;
+}
+
+/* 11) Make card headers clickable for collapse toggling */
+.card-header {
+  cursor: pointer;
+  background-color: inherit;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.card-header:hover {
+  background-color: rgba(0,0,0,0.03);
+}

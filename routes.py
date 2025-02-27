@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, Response, jsonify, send_file
 import json
 import logging
-import pandas as pd  # Added this import
-from search_logic import search_stream, sort_results
+import pandas as pd
+from search_logic import search_stream, sort_results  # Removed stop_search from here.
+import search_logic  # Import the module to update its global variable.
 from database import save_search, get_history, delete_search, get_cached_results, cache_results
 import sqlite3
 
@@ -26,8 +27,12 @@ def search_stream_route():
 
 @bp.route("/stop_search", methods=["POST"])
 def stop_search_route():
-    global stop_search
-    stop_search = True
+    keywords = request.args.get("keywords", "default")
+    if not keywords:
+        keywords = request.form.get("keywords", "default")  # Fallback
+    # Update the stop flag in the search_logic module directly.
+    search_logic.stop_search = True
+    logger.info(f"Stop search requested for keywords: {keywords}")
     return jsonify({"status": "stopped"})
 
 @bp.route("/history")
@@ -64,8 +69,10 @@ def delete_article(keywords, link):
                       (str(updated_results), len(updated_results), keywords))
             conn.commit()
             conn.close()
+            logger.info(f"Article deleted from {keywords}, remaining count: {len(updated_results)}")
             return jsonify({"status": "success", "remaining_count": len(updated_results)})
     conn.close()
+    logger.warning(f"Article not found for deletion: {link}")
     return jsonify({"status": "not_found"}), 404
 
 @bp.route("/delete_not_jufo/<path:keywords>", methods=["POST"])
@@ -82,8 +89,10 @@ def delete_not_jufo(keywords):
                       (str(updated_results), len(updated_results), keywords))
             conn.commit()
             conn.close()
+            logger.info(f"Non-JUFO articles deleted from {keywords}, remaining count: {len(updated_results)}")
             return jsonify({"status": "success", "remaining_count": len(updated_results)})
     conn.close()
+    logger.warning(f"No non-JUFO articles found to delete for: {keywords}")
     return jsonify({"status": "not_found"}), 404
 
 @bp.route("/download")

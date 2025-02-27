@@ -1,5 +1,0 @@
-/* Main style.css - Combines all CSS files for simplicity */
-
-@import url('base.css');
-@import url('components.css');
-@import url('layouts.css');

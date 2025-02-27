@@ -1,0 +1,48 @@
+/* projects.css */
+
+/* 1) Projects listing page cards */
+.project-card {
+  background-color: #ffffff; /* White background, matching main card style */
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  min-height: 200px;
+  color: #212121;
+  margin-bottom: 20px;
+}
+.project-card h5.card-title {
+  color: #212121; /* Dark text for readability */
+}
+
+/* 2) Project detail page sections */
+.section-card {
+  background-color:rgb(158, 194, 249); /* Darker gray */
+  color: #212121;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* 3) Search blocks within sections */
+.keyword-card {
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+  color: #212121;
+}
+
+/* 4) Hover effects for cards */
+.section-card:hover,
+.keyword-card:hover,
+.project-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 5) Make card headers clickable (for collapse toggling) */
+.card-header {
+  cursor: pointer;
+  background-color: inherit;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.card-header:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}

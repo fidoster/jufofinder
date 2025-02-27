@@ -24,3 +24,17 @@ KINETIK, Ratio: 0
 STEM Journal, Ratio: 41
 Journal of New Media, Ratio: 52
 mHealth, Ratio: 39
+ANZIAM Journal, Ratio: 57
+World Wide Web, Ratio: 37
+Circa, Ratio: 24
+Digital Literacy, Ratio: 56
+ACM SIGPLAN Notices, Ratio: 58
+STEM Journal, Ratio: 41
+Variations, Ratio: 41
+Mobile Learning, Ratio: 36
+Scent, Ratio: 50
+CHIMIA, Ratio: 17
+Queue, Ratio: 48
+Theme, Ratio: 36
+Color and Imaging Conference, Ratio: 59
+Phyton, Ratio: 34

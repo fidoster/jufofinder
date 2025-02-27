@@ -3,163 +3,157 @@
 {% block title %} - Home{% endblock %}
 
 {% block content %}
+<!-- Removed extra container for a more balanced layout -->
 {% if not from_history %}
-<div class="search-section">
-    <form id="searchForm">
-        <div class="input-group">
-            <input type="text" name="keywords" placeholder="Enter keywords (e.g., AI chatbots in education)" required>
-            <input type="number" name="max_articles" placeholder="Max articles per keyword" value="1000" min="1">
-        </div>
-        <div class="advanced-options">
-            <label for="yearRange">Year Range:</label>
-            <select name="year_range" id="yearRange">
-                <option value="all">All Years</option>
-                <option value="2010-9999">2010 Onwards</option>
-                <option value="2015-9999">2015 Onwards</option>
-                <option value="2020-9999">2020 Onwards</option>
-                <option value="custom">Custom Range</option>
-            </select>
-            <div id="customYearRange" style="display:none;">
-                <input type="number" name="year_start" id="yearStart" placeholder="Start" min="1900" max="2025" style="width:70px;">
-                <input type="number" name="year_end" id="yearEnd" placeholder="End" min="1900" max="2025" style="width:70px;">
+<!-- Search Form -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form id="searchForm">
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <input type="text" name="keywords" class="form-control" placeholder="Enter keywords (e.g., AI chatbots in education)" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" name="max_articles" class="form-control" placeholder="Max articles" value="1000" min="1">
+                </div>
             </div>
-            <label for="targetJufo">Advanced Search:</label>
-            <select name="target_jufo" id="targetJufo">
-                <option value="">Standard Search</option>
-                <option value="1">Stop at 1 JUFO 2/3</option>
-                <option value="2">Stop at 2 JUFO 2/3</option>
-                <option value="5">Stop at 5 JUFO 2/3</option>
-                <option value="10">Stop at 10 JUFO 2/3</option>
-                <option value="15">Stop at 15 JUFO 2/3</option>
-                <option value="20">Stop at 20 JUFO 2/3</option>
-            </select>
-            <button type="submit" id="searchBtn">Search</button>
-            <button type="button" id="stopBtn" class="stop-btn" style="display:none;">Stop</button>
-        </div>
-    </form>
-</div>
-<div id="progress-container">
-    <div id="progress-bar"></div>
-    <div id="progress-info">
-        <p id="progress-text">Ready to search</p>
-        <p id="jufo-count">JUFO 2/3: 0</p>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="yearRange" class="form-label">Year Range:</label>
+                    <select name="year_range" id="yearRange" class="form-select">
+                        <option value="all">All Years</option>
+                        <option value="2010-9999">2010 Onwards</option>
+                        <option value="2015-9999">2015 Onwards</option>
+                        <option value="2020-9999">2020 Onwards</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-3" id="customYearRange" style="display:none;">
+                    <div class="row">
+                        <div class="col-6">
+                            <input type="number" name="year_start" class="form-control" placeholder="Start" min="1900" max="2025">
+                        </div>
+                        <div class="col-6">
+                            <input type="number" name="year_end" class="form-control" placeholder="End" min="1900" max="2025">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="targetJufo" class="form-label">Advanced Search (JUFO Threshold):</label>
+                    <select name="target_jufo" id="targetJufo" class="form-select">
+                        <option value="">Standard Search</option>
+                        <option value="1">Stop at 1</option>
+                        <option value="2">Stop at 2</option>
+                        <option value="5">Stop at 5</option>
+                        <option value="10">Stop at 10</option>
+                        <option value="15">Stop at 15</option>
+                        <option value="20">Stop at 20</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="number" id="customTargetJufo" name="custom_target_jufo" class="form-control mt-2" placeholder="Enter custom threshold" style="display:none;">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" id="searchBtn" class="btn btn-primary w-100">Search</button>
+                    <button type="button" id="stopBtn" class="btn btn-danger w-100 mt-2" style="display:none;">Stop</button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
-<div id="filter-container">
-    <label for="jufoFilter">Filter by JUFO Level:</label>
-    <select id="jufoFilter">
-        <option value="all">All</option>
-        <option value="2_3">2 & 3</option>
-        <option value="3">3</option>
-        <option value="2">2</option>
-        <option value="1">1</option>
-        <option value="0">0</option>
-        <option value="not_ranked">Not JUFO Ranked</option>
-    </select>
+
+<!-- Progress Bar -->
+<div class="mb-4" id="progress-container">
+  <div class="progress" style="height: 30px;">
+    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" 
+         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+  </div>
+  <div class="d-flex justify-content-between mt-2 text-muted">
+    <span id="progress-text">Ready to search</span>
+    <span id="jufo-count">JUFO 2/3: 0</span>
+  </div>
+</div>
+
+
+<!-- Filter -->
+<div class="mb-4" id="filter-container">
+    <div class="row g-3 align-items-center">
+        <div class="col-auto">
+            <label for="jufoFilter" class="form-label">Filter by JUFO Level:</label>
+        </div>
+        <div class="col-auto">
+            <select id="jufoFilter" class="form-select">
+                <option value="all">All</option>
+                <option value="2_3">2 &amp; 3</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+                <option value="0">0</option>
+                <option value="not_ranked">Not JUFO Ranked</option>
+            </select>
+        </div>
+    </div>
 </div>
 {% else %}
-<h2 class="centered-title">Results for "{{ keywords }}"</h2>
-<div class="button-row">
-    <a href="{{ url_for('routes.download_csv', keywords=keywords) }}" class="action-btn">Download CSV</a>
-    <button id="deleteNotJufoBtn" class="action-btn delete-not-jufo-btn">Delete All Not JUFO Ranked</button>
-</div>
-{% endif %}
-{% if not from_history %}
-<button id="downloadBtn" style="display:none;" class="action-btn">Download CSV</button>
-{% endif %}
-<table id="resultsTable">
-    <thead>
-        <tr>
-            <th class="sortable" data-sort="title">Title</th>
-            <th class="sortable" data-sort="journal">Journal</th>
-            <th class="sortable" data-sort="year">Year</th>
-            <th class="sortable" data-sort="level">JUFO</th>
-            <th>Link</th>
-            {% if from_history %}
-            <th>Action</th>
-            {% endif %}
-        </tr>
-    </thead>
-    <tbody>
-        {% if results %}
-        {% for result in results %}
-        <tr>
-            <td>{{ result.title | safe }}</td>
-            <td>{{ result.journal }}</td>
-            <td>{{ result.year }}</td>
-            <td>{{ result.level }}</td>
-            <td>
-                {% if result.link != 'No link available' %}
-                <a href="{{ result.link }}" target="_blank" class="article-btn">Article</a>
-                {% else %}
-                <span>No Link</span>
-                {% endif %}
-            </td>
-            {% if from_history %}
-            <td>
-                <button class="delete-btn delete-article-btn" data-keywords="{{ keywords }}" data-link="{{ result.link }}">Delete</button>
-            </td>
-            {% endif %}
-        </tr>
-        {% endfor %}
-        {% endif %}
-    </tbody>
-</table>
+<!-- History Results Header -->
 {% if from_history %}
-<div class="button-group">
-    <a href="{{ url_for('routes.index') }}" class="action-btn">Back to Search</a>
+<h2 class="centered-title" data-keywords="{{ keywords }}">Results for "{{ keywords }}"</h2>
+<div class="d-flex justify-content-between mb-4">
+    <a href="{{ url_for('routes.download_csv', keywords=keywords) }}" class="btn btn-success">Download CSV</a>
+    <button id="deleteNotJufoBtn" class="btn btn-danger">Delete All Non-JUFO Ranked</button>
 </div>
 {% endif %}
-{% endblock %}
+{% endif %}
 
-{% block scripts %}
-<script>
-    document.querySelectorAll(".delete-article-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const keywords = btn.getAttribute("data-keywords");
-            const link = btn.getAttribute("data-link");
-            fetch(`/delete_article/${encodeURIComponent(keywords)}/${encodeURIComponent(link)}`, { method: "POST" })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Delete response:", data);
-                    if (data.status === "success") {
-                        btn.closest("tr").remove();
-                        updateHistoryCount(keywords, data.remaining_count);
-                    } else {
-                        console.error("Delete failed:", data.status);
-                    }
-                })
-                .catch(error => console.error("Error deleting article:", error));
-        });
-    });
+<!-- Download Button for Non-History -->
+{% if not from_history %}
+<button id="downloadBtn" class="btn btn-success mb-4" style="display:none;">Download CSV</button>
+{% endif %}
 
-    const deleteNotJufoBtn = document.getElementById("deleteNotJufoBtn");
-    if (deleteNotJufoBtn) {
-        deleteNotJufoBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const keywords = document.querySelector(".centered-title").textContent.replace("Results for ", "").replace(/"/g, "");
-            fetch(`/delete_not_jufo/${encodeURIComponent(keywords)}`, { method: "POST" })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Delete not JUFO response:", data);
-                    if (data.status === "success") {
-                        document.querySelectorAll("#resultsTable tbody tr").forEach(row => {
-                            if (row.children[3].textContent === "Not JUFO Ranked") {
-                                row.remove();
-                            }
-                        });
-                        updateHistoryCount(keywords, data.remaining_count);
-                    } else {
-                        console.error("Delete not JUFO failed:", data.status);
-                    }
-                })
-                .catch(error => console.error("Error deleting not JUFO articles:", error));
-        });
-    }
+<!-- Results Table -->
+<div class="table-responsive">
+    <table id="resultsTable" class="table table-striped table-hover">
+        <thead class="table-light">
+            <tr>
+                <th class="sortable" data-sort="title">Title</th>
+                <th class="sortable" data-sort="journal">Journal</th>
+                <th class="sortable" data-sort="year">Year</th>
+                <th class="sortable" data-sort="level">JUFO</th>
+                <th>Link</th>
+                {% if from_history %}
+                <th>Action</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if results %}
+            {% for result in results %}
+            <tr>
+                <td>{{ result.title | safe }}</td>
+                <td>{{ result.journal }}</td>
+                <td>{{ result.year }}</td>
+                <td>{{ result.level }}</td>
+                <td>
+                    {% if result.link != 'No link available' %}
+                    <a href="{{ result.link }}" target="_blank" class="btn btn-sm btn-primary">Article</a>
+                    {% else %}
+                    <span>No Link</span>
+                    {% endif %}
+                </td>
+                {% if from_history %}
+                <td>
+                    <button class="btn btn-sm btn-danger delete-article-btn" data-keywords="{{ keywords }}" data-link="{{ result.link }}">Delete</button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 
-    function updateHistoryCount(keywords, newCount) {
-        console.log(`Updated count for "${keywords}": ${newCount}`);
-    }
-</script>
+{% if from_history %}
+<div class="text-center mt-4">
+    <a href="{{ url_for('routes.index') }}" class="btn btn-primary">Back to Search</a>
+</div>
+{% endif %}
 {% endblock %}

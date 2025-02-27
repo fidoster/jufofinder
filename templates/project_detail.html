@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %} - Project Detail{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>{{ project.title }}</h2>
+  <p>{{ project.description }}</p>
+  <hr>
+  <div class="mb-3">
+    <form action="{{ url_for('projects.add_section', project_id=project.id) }}" method="post" class="row g-2">
+      <div class="col-md-8">
+        <input type="text" name="title" class="form-control" placeholder="New Section Title" required>
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Add Section</button>
+      </div>
+    </form>
+  </div>
+  {% if sections %}
+    {% for section in sections %}
+      <div class="card mb-3 section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">{{ section.title }}</h5>
+          <form action="{{ url_for('projects.delete_section', section_id=section.id) }}" method="post" onsubmit="return confirm('Delete this section?');">
+            <button type="submit" class="btn btn-sm btn-danger">Delete Section</button>
+          </form>
+        </div>
+        <!-- Collapsible content, collapsed by default -->
+        <div class="collapse">
+          <div class="card-body keyword-card-body">
+            {% if section.articles %}
+              {% for block in section.articles %}
+                {% if block.block_type == "search" %}
+                  <div class="card mb-3 keyword-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0">Results for "{{ block.keywords }}"</h5>
+                      <form action="{{ url_for('projects.delete_article_route', project_id=project.id, section_id=section.id, article_id=block.id) }}" method="post" onsubmit="return confirm('Delete this entire search block?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete Block</button>
+                      </form>
+                    </div>
+                    <!-- Collapsible search block, collapsed by default -->
+                    <div class="collapse">
+                      <div class="card-body">
+                        {% set results = block.results | safe | fromjson %}
+                        <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>Journal</th>
+                              <th>Year</th>
+                              <th>JUFO</th>
+                              <th>Link</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for article in results %}
+                              <tr>
+                                <td>{{ article.title }}</td>
+                                <td>{{ article.journal }}</td>
+                                <td>{{ article.year }}</td>
+                                <td>{{ article.level }}</td>
+                                <td>
+                                  {% if article.link != 'No link available' %}
+                                    <a href="{{ article.link }}" target="_blank" class="btn btn-sm btn-primary">Article</a>
+                                  {% else %}
+                                    <span>No Link</span>
+                                  {% endif %}
+                                </td>
+                                <td>
+                                  <!-- New form for deleting an individual article from this search block -->
+                                  <form action="{{ url_for('projects.delete_article_from_block', project_id=project.id, section_id=section.id, block_id=block.id, article_index=loop.index0) }}" method="post" onsubmit="return confirm('Delete this article?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                  </form>
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="mb-2">
+                    <strong>{{ block.title }}</strong> - {{ block.link }}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            <div class="mt-3">
+              <form action="{{ url_for('projects.add_search_block', project_id=project.id, section_id=section.id) }}" method="post" class="row g-2 search-block-form">
+                <div class="col-md-10">
+                  <select name="keywords" class="form-select" required>
+                    <option value="">Select search keywords</option>
+                    {% for key in available_searches %}
+                      <option value="{{ key }}">{{ key }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn btn-primary w-100">Add Search Block</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No sections added yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

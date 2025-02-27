@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %} - New Project{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Create New Project</h2>
+    <form action="{{ url_for('projects.new_project') }}" method="post" class="mt-3">
+        <div class="mb-3">
+            <label for="title" class="form-label">Project Title</label>
+            <input type="text" name="title" id="title" class="form-control" placeholder="Enter project title" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Project Description</label>
+            <textarea name="description" id="description" class="form-control" placeholder="Enter a brief description" rows="4"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Create Project</button>
+        <a href="{{ url_for('projects.list_projects') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
