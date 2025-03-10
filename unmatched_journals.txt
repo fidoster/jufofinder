@@ -38,3 +38,53 @@ Queue, Ratio: 48
 Theme, Ratio: 36
 Color and Imaging Conference, Ratio: 59
 Phyton, Ratio: 34
+Hacettepe University Journal of Education, Ratio: 58
+Pastoral Care in Education, Ratio: 39
+ALPHA PSYCHIATRY, Ratio: 12
+LETRAS, Ratio: 17
+Student Engagement, Ratio: 53
+Journal of New Media, Ratio: 52
+LINGUISTICA, Ratio: 14
+INTELIGENCIA ARTIFICIAL, Ratio: 9
+DIGITAL HEALTH, Ratio: 15
+Mentoring, Ratio: 58
+Biography, Ratio: 52
+Safundi, Ratio: 18
+Integrative Physiology, Ratio: 40
+Electronic News, Ratio: 41
+IUBMB Life, Ratio: 50
+School Science and Mathematics, Ratio: 51
+JOURNAL OF SOCIAL SCIENCE RESEARCH, Ratio: 10
+At The Crossroads, Ratio: 52
+PRACTICE, Ratio: 12
+EQUATIONS, Ratio: 5
+TEM Journal, Ratio: 56
+ATHENS JOURNAL OF EDUCATION, Ratio: 15
+PROSPECTS, Ratio: 11
+The Ultras, Ratio: 56
+SLEEP, Ratio: 20
+Pastoral Care in Education, Ratio: 39
+Dutch Crossing, Ratio: 41
+Scriptura, Ratio: 20
+Adam Smith, Ratio: 52
+Advances in Education, Ratio: 55
+CALICO Journal, Ratio: 57
+Pedagogy, Ratio: 58
+Artificial societies, Ratio: 45
+Cognitive Technologies, Ratio: 45
+Web-Based Learning, Ratio: 34
+Digital Multimedia, Ratio: 43
+Lingua Franca, Ratio: 44
+Interactive Multimedia, Ratio: 43
+Arts and Humanities in Higher Education, Ratio: 53
+Advances in Education, Ratio: 55
+Book of Abstracts, Ratio: 47
+JAAPA, Ratio: 15
+Consultant, Ratio: 50
+Seizure, Ratio: 48
+STEM Journal, Ratio: 41
+Student Engagement, Ratio: 53
+Advances in Education, Ratio: 55
+JOURNAL OF LANGUAGE, Ratio: 15
+Multilingual Education, Ratio: 58
+Arts and Humanities in Higher Education, Ratio: 53
